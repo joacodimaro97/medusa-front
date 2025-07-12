@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useEffect } from 'react'
+import toast from 'react-hot-toast'
 import { createCart, addToCart, updateCartItem, removeFromCart, getCart } from '../services/medusa'
 
 const CartContext = createContext()
@@ -13,6 +14,8 @@ const cartReducer = (state, action) => {
       return { ...state, error: action.payload, loading: false }
     case 'CLEAR_CART':
       return { ...state, cart: null, loading: false }
+    case 'TOGGLE_CART_SIDEBAR':
+      return { ...state, isCartOpen: action.payload }
     default:
       return state
   }
@@ -22,7 +25,8 @@ export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, {
     cart: null,
     loading: false,
-    error: null
+    error: null,
+    isCartOpen: false
   })
 
   // Inicializar carrito al cargar la aplicación
@@ -55,6 +59,7 @@ export const CartProvider = ({ children }) => {
       dispatch({ type: 'SET_CART', payload: cart })
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message })
+      toast.error('Error al crear el carrito')
     }
   }
 
@@ -65,8 +70,17 @@ export const CartProvider = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true })
       const updatedCart = await addToCart(state.cart.id, variantId, quantity)
       dispatch({ type: 'SET_CART', payload: updatedCart })
+      
+      // Mostrar toast de éxito más sutil
+      toast.success('Producto añadido al carrito', {
+        duration: 2000,
+        icon: '✓',
+      })
+      
+      // NO abrir automáticamente el carrito - dejar que el usuario decida
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message })
+      toast.error('Error al añadir el producto')
     }
   }
 
@@ -77,8 +91,15 @@ export const CartProvider = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true })
       const updatedCart = await updateCartItem(state.cart.id, lineItemId, quantity)
       dispatch({ type: 'SET_CART', payload: updatedCart })
+      
+      if (quantity === 0) {
+        toast.success('Producto eliminado', { duration: 2000 })
+      } else {
+        toast.success('Cantidad actualizada', { duration: 1500 })
+      }
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message })
+      toast.error('Error al actualizar la cantidad')
     }
   }
 
@@ -89,14 +110,17 @@ export const CartProvider = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true })
       const updatedCart = await removeFromCart(state.cart.id, lineItemId)
       dispatch({ type: 'SET_CART', payload: updatedCart })
+      toast.success('Producto eliminado', { duration: 2000 })
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message })
+      toast.error('Error al eliminar el producto')
     }
   }
 
   const clearCart = () => {
     localStorage.removeItem('cartId')
     dispatch({ type: 'CLEAR_CART' })
+    toast.success('Carrito vaciado', { duration: 2000 })
   }
 
   const getCartItemCount = () => {
@@ -109,16 +133,32 @@ export const CartProvider = ({ children }) => {
     return state.cart.total / 100 // Convertir de centavos a la moneda principal
   }
 
+  const toggleCartSidebar = (isOpen) => {
+    dispatch({ type: 'TOGGLE_CART_SIDEBAR', payload: isOpen })
+  }
+
+  const openCartSidebar = () => {
+    dispatch({ type: 'TOGGLE_CART_SIDEBAR', payload: true })
+  }
+
+  const closeCartSidebar = () => {
+    dispatch({ type: 'TOGGLE_CART_SIDEBAR', payload: false })
+  }
+
   const value = {
     cart: state.cart,
     loading: state.loading,
     error: state.error,
+    isCartOpen: state.isCartOpen,
     addItemToCart,
     updateCartItemQuantity,
     removeItemFromCart,
     clearCart,
     getCartItemCount,
-    getCartTotal
+    getCartTotal,
+    toggleCartSidebar,
+    openCartSidebar,
+    closeCartSidebar
   }
 
   return (

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ShoppingCart, Heart, Star, ArrowLeft } from 'lucide-react'
+import { Heart, Star, ArrowLeft } from 'lucide-react'
 import { getProduct } from '../services/medusa'
-import { useCart } from '../contexts/CartContext'
+
 
 const ProductDetail = () => {
   const { id } = useParams()
@@ -10,7 +10,6 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true)
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [quantity, setQuantity] = useState(1)
-  const { addItemToCart } = useCart()
 
   useEffect(() => {
     fetchProduct()
@@ -28,12 +27,6 @@ const ProductDetail = () => {
       console.error('Error fetching product:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleAddToCart = async () => {
-    if (selectedVariant) {
-      await addItemToCart(selectedVariant.id, quantity)
     }
   }
 
@@ -161,7 +154,7 @@ const ProductDetail = () => {
                   <button
                     key={variant.id}
                     onClick={() => setSelectedVariant(variant)}
-                    className={`p-3 border rounded-lg text-left ${
+                    className={`p-3 border rounded-lg text-left transition-colors ${
                       selectedVariant?.id === variant.id
                         ? 'border-black bg-gray-50'
                         : 'border-gray-300 hover:border-gray-400'
@@ -186,7 +179,7 @@ const ProductDetail = () => {
               <div className="flex items-center border border-gray-300 rounded-lg">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-3 py-2 hover:bg-gray-100"
+                  className="px-3 py-2 hover:bg-gray-100 transition-colors"
                 >
                   -
                 </button>
@@ -195,7 +188,7 @@ const ProductDetail = () => {
                 </span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="px-3 py-2 hover:bg-gray-100"
+                  className="px-3 py-2 hover:bg-gray-100 transition-colors"
                 >
                   +
                 </button>
@@ -203,16 +196,13 @@ const ProductDetail = () => {
             </div>
 
             <div className="flex space-x-4">
-              <button
-                onClick={handleAddToCart}
+              <AddToCartButton 
+                variantId={selectedVariant?.id}
                 disabled={!selectedVariant}
-                className="btn-primary flex-1 flex items-center justify-center space-x-2"
-              >
-                <ShoppingCart size={20} />
-                <span>Agregar al Carrito</span>
-              </button>
+                className="flex-1"
+              />
               
-              <button className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+              <button className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Heart size={20} />
               </button>
             </div>
