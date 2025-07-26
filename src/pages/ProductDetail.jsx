@@ -196,11 +196,7 @@ const ProductDetail = () => {
             </div>
 
             <div className="flex space-x-4">
-              <AddToCartButton 
-                variantId={selectedVariant?.id}
-                disabled={!selectedVariant}
-                className="flex-1"
-              />
+              
               
               <button className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Heart size={20} />
